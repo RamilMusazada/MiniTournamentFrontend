@@ -113,6 +113,23 @@
       display: none;
       margin-top: 20px;
     }
+    .score-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .score-input {
+      width: 60px;
+      text-align: center;
+    }
+    .vs-text {
+      font-weight: bold;
+      margin: 0 10px;
+    }
+    .team-select {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
@@ -122,7 +139,7 @@
   <div class="tabs">
     <div class="tab active" onclick="openTab('teams')">Komandalar</div>
     <div class="tab" onclick="openTab('add-team')">Komanda Əlavə Et</div>
-    <div class="tab" onclick="openTab('update-score')">Nəticə Əlavə Et</div>
+    <div class="tab" onclick="openTab('update-score')">Oyun Nəticəsi Əlavə Et</div>
   </div>
 
   <div id="message" class="alert"></div>
@@ -168,18 +185,36 @@
 
   <div id="update-score" class="content">
     <h2>Oyun Nəticəsi Əlavə Et</h2>
-    <form id="update-score-form">
-      <label for="team-select">Komanda:</label>
-      <select id="team-select" name="teamName" required>
-        <option value="">Komanda seçin</option>
-        <!-- Options will be loaded here -->
-      </select>
+    <form id="update-match-form">
+      <div class="score-container">
+        <div style="flex: 1;">
+          <label for="team1-select">Ev Sahibi Komandası:</label>
+          <select id="team1-select" name="team1Name" class="team-select" required>
+            <option value="">Komanda seçin</option>
+            <!-- Options will be loaded here -->
+          </select>
+        </div>
 
-      <label for="scored">Vurulmuş Qollar:</label>
-      <input type="number" id="scored" name="scoredGoals" min="0" required>
+        <div>
+          <label for="team1-goals">Qollar:</label>
+          <input type="number" id="team1-goals" name="team1Goals" class="score-input" min="0" required>
+        </div>
 
-      <label for="conceded">Buraxılmış Qollar:</label>
-      <input type="number" id="conceded" name="concededGoals" min="0" required>
+        <div class="vs-text">VS</div>
+
+        <div>
+          <label for="team2-goals">Qollar:</label>
+          <input type="number" id="team2-goals" name="team2Goals" class="score-input" min="0" required>
+        </div>
+
+        <div style="flex: 1;">
+          <label for="team2-select">Qonaq Komandası:</label>
+          <select id="team2-select" name="team2Name" class="team-select" required>
+            <option value="">Komanda seçin</option>
+            <!-- Options will be loaded here -->
+          </select>
+        </div>
+      </div>
 
       <button type="submit">Nəticə Əlavə Et</button>
     </form>
@@ -187,7 +222,7 @@
 </div>
 
 <script>
-  const API_URL = 'http://localhost:8080/api/teams';
+  const API_URL = 'http://localhost:8080/api/v1/teams';
 
   function openTab(tabName) {
     const contents = document.getElementsByClassName('content');
@@ -219,16 +254,16 @@
         teams.forEach(team => {
           const row = document.createElement('tr');
           row.innerHTML = `
-                            <td>${team.name}</td>
-                            <td>${team.played}</td>
-                            <td>${team.wins}</td>
-                            <td>${team.draws}</td>
-                            <td>${team.losses}</td>
-                            <td>${team.goalsScored}</td>
-                            <td>${team.goalsConceded}</td>
-                            <td>${team.goalDifference}</td>
-                            <td>${team.points}</td>
-                        `;
+            <td>${team.name}</td>
+            <td>${team.played}</td>
+            <td>${team.wins}</td>
+            <td>${team.draws}</td>
+            <td>${team.losses}</td>
+            <td>${team.goalsScored}</td>
+            <td>${team.goalsConceded}</td>
+            <td>${team.goalDifference}</td>
+            <td>${team.points}</td>
+          `;
           tableBody.appendChild(row);
         });
       })
@@ -246,14 +281,24 @@
         return response.json();
       })
       .then(teams => {
-        const selectElement = document.getElementById('team-select');
-        selectElement.innerHTML = '<option value="">Komanda seçin</option>';
+        const team1Select = document.getElementById('team1-select');
+        const team2Select = document.getElementById('team2-select');
+
+        team1Select.innerHTML = '<option value="">Komanda seçin</option>';
+        team2Select.innerHTML = '<option value="">Komanda seçin</option>';
 
         teams.forEach(team => {
-          const option = document.createElement('option');
-          option.value = team.name;
-          option.textContent = team.name;
-          selectElement.appendChild(option);
+          // Add options to team1 select
+          const option1 = document.createElement('option');
+          option1.value = team.name;
+          option1.textContent = team.name;
+          team1Select.appendChild(option1);
+
+          // Add options to team2 select
+          const option2 = document.createElement('option');
+          option2.value = team.name;
+          option2.textContent = team.name;
+          team2Select.appendChild(option2);
         });
       })
       .catch(error => {
@@ -302,14 +347,22 @@
       });
   });
 
-  document.getElementById('update-score-form').addEventListener('submit', function(event) {
+  document.getElementById('update-match-form').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    const teamName = document.getElementById('team-select').value;
-    const scoredGoals = document.getElementById('scored').value;
-    const concededGoals = document.getElementById('conceded').value;
+    const team1Name = document.getElementById('team1-select').value;
+    const team2Name = document.getElementById('team2-select').value;
+    const team1Goals = document.getElementById('team1-goals').value;
+    const team2Goals = document.getElementById('team2-goals').value;
 
-    fetch(`${API_URL}/update-score?teamName=${encodeURIComponent(teamName)}&scoredGoals=${scoredGoals}&concededGoals=${concededGoals}`, {
+    if (team1Name === team2Name) {
+      showMessage('Eyni komandanı iki dəfə seçə bilməzsiniz!', 'danger');
+      return;
+    }
+
+    const url = `${API_URL}/update-match-result?team1Name=${encodeURIComponent(team1Name)}&team2Name=${encodeURIComponent(team2Name)}&team1Goals=${team1Goals}&team2Goals=${team2Goals}`;
+
+    fetch(url, {
       method: 'PUT'
     })
       .then(response => {
@@ -320,9 +373,10 @@
       })
       .then(message => {
         showMessage('Oyun nəticəsi uğurla əlavə edildi!', 'success');
-        document.getElementById('team-select').value = '';
-        document.getElementById('scored').value = '';
-        document.getElementById('conceded').value = '';
+        document.getElementById('team1-select').value = '';
+        document.getElementById('team2-select').value = '';
+        document.getElementById('team1-goals').value = '';
+        document.getElementById('team2-goals').value = '';
         loadTeams('all');
       })
       .catch(error => {
