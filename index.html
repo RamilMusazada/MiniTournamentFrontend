@@ -4,142 +4,407 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Futbol Komanda İdarəetmə Sistemi</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f0f2f5;
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --secondary: #f8fafc;
+      --dark: #1e293b;
+      --light: #f1f5f9;
+      --danger: #ef4444;
+      --success: #10b981;
+      --text: #334155;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --radius: 8px;
+      --transition: all 0.3s ease;
     }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--secondary);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
     .container {
       max-width: 1200px;
       margin: 0 auto;
+      padding: 2rem 1rem;
     }
-    h1, h2 {
-      color: #1e3a8a;
+
+    header {
+      margin-bottom: 2rem;
       text-align: center;
     }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
     .tabs {
       display: flex;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ddd;
+      background-color: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      overflow: hidden;
     }
+
     .tab {
-      padding: 10px 20px;
+      flex: 1;
+      padding: 1rem;
       cursor: pointer;
-      background-color: #f0f0f0;
-      border: 1px solid #ddd;
-      border-bottom: none;
-      margin-right: 5px;
-      border-radius: 5px 5px 0 0;
+      text-align: center;
+      font-weight: 500;
+      transition: var(--transition);
+      border-bottom: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
+
+    .tab:hover {
+      background-color: var(--light);
+    }
+
     .tab.active {
-      background-color: #1e3a8a;
-      color: white;
+      border-bottom: 3px solid var(--primary);
+      color: var(--primary);
+      background-color: white;
     }
+
     .content {
       display: none;
-      padding: 20px;
       background-color: white;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
     }
+
     .content.active {
       display: block;
+      animation: fadeIn 0.5s;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background-color: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.75rem 1.25rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 1.5rem;
+      box-shadow: var(--shadow);
     }
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      background-color: #f0f0f0;
-      font-weight: bold;
-    }
-    tr:hover {
-      background-color: #f5f5f5;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-    label {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input, select {
-      padding: 8px;
-      margin-top: 5px;
-      margin-bottom: 15px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    button {
-      padding: 10px 15px;
-      background-color: #1e3a8a;
+
+    thead {
+      background-color: var(--primary);
       color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
     }
-    button:hover {
-      background-color: #152b5e;
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
     }
-    .alert {
-      padding: 10px 15px;
-      margin: 15px 0;
-      border-radius: 4px;
+
+    th {
+      font-weight: 600;
     }
-    .alert-success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
     }
-    .alert-danger {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
+
+    tbody tr:last-child {
+      border-bottom: none;
     }
-    #message {
-      display: none;
-      margin-top: 20px;
+
+    tbody tr:hover {
+      background-color: var(--light);
     }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: var(--transition);
+      background-color: white;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
     .score-container {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .score-group {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
+      gap: 1rem;
+      justify-content: center;
     }
+
     .score-input {
-      width: 60px;
+      width: 80px;
       text-align: center;
+      font-size: 1.25rem;
+      font-weight: 600;
     }
+
     .vs-text {
-      font-weight: bold;
-      margin: 0 10px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 40px;
+      width: 40px;
+      border-radius: 50%;
+      background-color: var(--light);
     }
-    .team-select {
-      flex: 1;
+
+    .alert {
+      padding: 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .alert i {
+      font-size: 1.25rem;
+    }
+
+    .alert-success {
+      background-color: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid var(--success);
+    }
+
+    .alert-danger {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border-left: 4px solid var(--danger);
+    }
+
+    #message {
+      display: none;
+      animation: slideIn 0.3s;
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      color: var(--primary);
+      font-weight: 500;
+      gap: 0.75rem;
+    }
+
+    .spinner {
+      animation: spin 1s linear infinite;
+      width: 24px;
+      height: 24px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      background-color: var(--light);
+      padding: 1rem;
+      border-radius: var(--radius);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--border);
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      margin-bottom: 1.5rem;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 768px) {
+      .score-container {
+        grid-template-columns: 1fr;
+      }
+
+      .vs-text {
+        margin: 1rem auto;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .tab {
+        border-bottom: none;
+        border-left: 3px solid transparent;
+      }
+
+      .tab.active {
+        border-bottom: none;
+        border-left: 3px solid var(--primary);
+      }
     }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>Futbol Komanda İdarəetmə Sistemi</h1>
+  <header>
+    <h1>Futbol Komanda İdarəetmə Sistemi</h1>
+  </header>
 
   <div class="tabs">
-    <div class="tab active" onclick="openTab('teams')">Komandalar</div>
-    <div class="tab" onclick="openTab('add-team')">Komanda Əlavə Et</div>
-    <div class="tab" onclick="openTab('update-score')">Oyun Nəticəsi Əlavə Et</div>
+    <div class="tab active" onclick="openTab('teams')">
+      <i class="fas fa-trophy"></i> Komandalar
+    </div>
+    <div class="tab" onclick="openTab('add-team')">
+      <i class="fas fa-plus-circle"></i> Komanda Əlavə Et
+    </div>
+    <div class="tab" onclick="openTab('update-score')">
+      <i class="fas fa-futbol"></i> Oyun Nəticəsi Əlavə Et
+    </div>
   </div>
 
   <div id="message" class="alert"></div>
@@ -147,76 +412,145 @@
   <div id="teams" class="content active">
     <h2>Komandalar Cədvəli</h2>
 
-    <div>
-      <button onclick="loadTeams('all')">Bütün Komandalar</button>
-      <button onclick="loadTeams('sorted-by-points')">Xal Sayına Görə Sırala</button>
-      <button onclick="loadTeams('sorted-by-wins')">Qələbə Sayına Görə Sırala</button>
+    <div class="filter-buttons">
+      <button onclick="loadTeams('all')">
+        <i class="fas fa-list"></i> Bütün Komandalar
+      </button>
+      <button onclick="loadTeams('sorted-by-points')">
+        <i class="fas fa-sort-amount-down"></i> Xal Sayına Görə Sırala
+      </button>
+      <button onclick="loadTeams('sorted-by-wins')">
+        <i class="fas fa-medal"></i> Qələbə Sayına Görə Sırala
+      </button>
     </div>
 
-    <table id="teams-table">
-      <thead>
-      <tr>
-        <th>Komanda</th>
-        <th>Oyun</th>
-        <th>Q</th>
-        <th>H</th>
-        <th>M</th>
-        <th>VQ</th>
-        <th>BQ</th>
-        <th>QF</th>
-        <th>X</th>
-      </tr>
-      </thead>
-      <tbody id="teams-body">
-      <!-- Data will be loaded here -->
-      </tbody>
-    </table>
+    <div id="loading-teams" class="loading" style="display: none;">
+      <div class="spinner">
+        <i class="fas fa-circle-notch"></i>
+      </div>
+      Komandalar yüklənir...
+    </div>
+
+    <div id="teams-container">
+      <table id="teams-table">
+        <thead>
+        <tr>
+          <th>Komanda</th>
+          <th>Oyun</th>
+          <th>Q</th>
+          <th>H</th>
+          <th>M</th>
+          <th>VQ</th>
+          <th>BQ</th>
+          <th>QF</th>
+          <th>X</th>
+        </tr>
+        </thead>
+        <tbody id="teams-body">
+        <!-- Data will be loaded here -->
+        </tbody>
+      </table>
+
+      <div id="empty-teams" class="empty-state" style="display: none;">
+        <i class="fas fa-users-slash"></i>
+        <h3>Komanda tapılmadı</h3>
+        <p>Cədvəl yaratmaq üçün komanda əlavə edin</p>
+        <button onclick="openTab('add-team')">
+          <i class="fas fa-plus-circle"></i> Komanda Əlavə Et
+        </button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="badge">Q</div>
+        <span>Qələbə</span>
+      </div>
+      <div class="legend-item">
+        <div class="badge">H</div>
+        <span>Heç-heçə</span>
+      </div>
+      <div class="legend-item">
+        <div class="badge">M</div>
+        <span>Məğlubiyyət</span>
+      </div>
+      <div class="legend-item">
+        <div class="badge">VQ</div>
+        <span>Vurulmuş qol</span>
+      </div>
+      <div class="legend-item">
+        <div class="badge">BQ</div>
+        <span>Buraxılmış qol</span>
+      </div>
+      <div class="legend-item">
+        <div class="badge">QF</div>
+        <span>Qol fərqi</span>
+      </div>
+      <div class="legend-item">
+        <div class="badge">X</div>
+        <span>Xal</span>
+      </div>
+    </div>
   </div>
 
   <div id="add-team" class="content">
     <h2>Yeni Komanda Əlavə Et</h2>
-    <form id="add-team-form">
-      <label for="teamName">Komanda Adı:</label>
-      <input type="text" id="teamName" name="name" required>
 
-      <button type="submit">Komanda Əlavə Et</button>
+    <form id="add-team-form">
+      <div class="form-group">
+        <label for="teamName">Komanda Adı:</label>
+        <input type="text" id="teamName" name="name" required placeholder="Komanda adını daxil edin">
+      </div>
+
+      <button type="submit">
+        <i class="fas fa-plus-circle"></i> Komanda Əlavə Et
+      </button>
     </form>
   </div>
 
   <div id="update-score" class="content">
     <h2>Oyun Nəticəsi Əlavə Et</h2>
+
     <form id="update-match-form">
       <div class="score-container">
-        <div style="flex: 1;">
-          <label for="team1-select">Ev Sahibi Komandası:</label>
-          <select id="team1-select" name="team1Name" class="team-select" required>
-            <option value="">Komanda seçin</option>
-            <!-- Options will be loaded here -->
-          </select>
+        <div>
+          <div class="form-group">
+            <label for="team1-select">Ev Sahibi Komandası:</label>
+            <select id="team1-select" name="team1Name" required>
+              <option value="">Komanda seçin</option>
+              <!-- Options will be loaded here -->
+            </select>
+          </div>
+        </div>
+
+        <div class="score-group">
+          <div class="form-group">
+            <label for="team1-goals">Qollar:</label>
+            <input type="number" id="team1-goals" name="team1Goals" class="score-input" min="0" required>
+          </div>
+
+          <div class="vs-text">VS</div>
+
+          <div class="form-group">
+            <label for="team2-goals">Qollar:</label>
+            <input type="number" id="team2-goals" name="team2Goals" class="score-input" min="0" required>
+          </div>
         </div>
 
         <div>
-          <label for="team1-goals">Qollar:</label>
-          <input type="number" id="team1-goals" name="team1Goals" class="score-input" min="0" required>
-        </div>
-
-        <div class="vs-text">VS</div>
-
-        <div>
-          <label for="team2-goals">Qollar:</label>
-          <input type="number" id="team2-goals" name="team2Goals" class="score-input" min="0" required>
-        </div>
-
-        <div style="flex: 1;">
-          <label for="team2-select">Qonaq Komandası:</label>
-          <select id="team2-select" name="team2Name" class="team-select" required>
-            <option value="">Komanda seçin</option>
-            <!-- Options will be loaded here -->
-          </select>
+          <div class="form-group">
+            <label for="team2-select">Qonaq Komandası:</label>
+            <select id="team2-select" name="team2Name" required>
+              <option value="">Komanda seçin</option>
+              <!-- Options will be loaded here -->
+            </select>
+          </div>
         </div>
       </div>
 
-      <button type="submit">Nəticə Əlavə Et</button>
+      <button type="submit">
+        <i class="fas fa-save"></i> Nəticə Əlavə Et
+      </button>
     </form>
   </div>
 </div>
@@ -237,9 +571,24 @@
 
     document.getElementById(tabName).classList.add('active');
     event.currentTarget.classList.add('active');
+
+    // If switching to update-score tab, reload team options
+    if (tabName === 'update-score') {
+      loadTeamOptions();
+    }
+
+    // If switching to teams tab, reload teams
+    if (tabName === 'teams') {
+      loadTeams('all');
+    }
   }
 
   function loadTeams(endpoint) {
+    // Show loading indicator
+    document.getElementById('loading-teams').style.display = 'block';
+    document.getElementById('teams-table').style.display = 'none';
+    document.getElementById('empty-teams').style.display = 'none';
+
     fetch(`${API_URL}/${endpoint}`)
       .then(response => {
         if (!response.ok) {
@@ -248,11 +597,29 @@
         return response.json();
       })
       .then(teams => {
+        // Hide loading indicator
+        document.getElementById('loading-teams').style.display = 'none';
+
         const tableBody = document.getElementById('teams-body');
         tableBody.innerHTML = '';
 
-        teams.forEach(team => {
+        if (teams.length === 0) {
+          document.getElementById('teams-table').style.display = 'none';
+          document.getElementById('empty-teams').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('teams-table').style.display = 'table';
+        document.getElementById('empty-teams').style.display = 'none';
+
+        teams.forEach((team, index) => {
           const row = document.createElement('tr');
+          // Highlight the first row if sorting by points or wins
+          if (index === 0 && (endpoint === 'sorted-by-points' || endpoint === 'sorted-by-wins')) {
+            row.style.backgroundColor = '#dbeafe';
+            row.style.fontWeight = 'bold';
+          }
+
           row.innerHTML = `
             <td>${team.name}</td>
             <td>${team.played}</td>
@@ -268,11 +635,21 @@
         });
       })
       .catch(error => {
+        // Hide loading indicator
+        document.getElementById('loading-teams').style.display = 'none';
+        document.getElementById('teams-table').style.display = 'none';
+        document.getElementById('empty-teams').style.display = 'block';
         showMessage(error.message, 'danger');
       });
   }
 
   function loadTeamOptions() {
+    const team1Select = document.getElementById('team1-select');
+    const team2Select = document.getElementById('team2-select');
+
+    team1Select.innerHTML = '<option value="">Yüklənir...</option>';
+    team2Select.innerHTML = '<option value="">Yüklənir...</option>';
+
     fetch(`${API_URL}/all`)
       .then(response => {
         if (!response.ok) {
@@ -281,11 +658,13 @@
         return response.json();
       })
       .then(teams => {
-        const team1Select = document.getElementById('team1-select');
-        const team2Select = document.getElementById('team2-select');
-
         team1Select.innerHTML = '<option value="">Komanda seçin</option>';
         team2Select.innerHTML = '<option value="">Komanda seçin</option>';
+
+        if (teams.length === 0) {
+          showMessage('Oyun nəticəsi əlavə etmək üçün əvvəlcə komandalar əlavə edin', 'danger');
+          return;
+        }
 
         teams.forEach(team => {
           // Add options to team1 select
@@ -302,6 +681,8 @@
         });
       })
       .catch(error => {
+        team1Select.innerHTML = '<option value="">Xəta baş verdi</option>';
+        team2Select.innerHTML = '<option value="">Xəta baş verdi</option>';
         showMessage(error.message, 'danger');
       });
   }
@@ -309,7 +690,12 @@
   document.getElementById('add-team-form').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    const teamName = document.getElementById('teamName').value;
+    const teamName = document.getElementById('teamName').value.trim();
+
+    if (!teamName) {
+      showMessage('Komanda adı boş ola bilməz', 'danger');
+      return;
+    }
 
     const newTeam = {
       name: teamName,
@@ -323,6 +709,12 @@
       points: 0
     };
 
+    // Disable submit button to prevent multiple submissions
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Əlavə edilir...';
+
     fetch(`${API_URL}/add`, {
       method: 'POST',
       headers: {
@@ -332,18 +724,29 @@
     })
       .then(response => {
         if (!response.ok) {
+          if (response.status === 409) {
+            throw new Error('Bu adlı komanda artıq mövcuddur');
+          }
           throw new Error('Şəbəkə xətası baş verdi');
         }
         return response.text();
       })
       .then(message => {
-        showMessage('Komanda uğurla əlavə edildi!', 'success');
+        showMessage(`"${teamName}" komandası uğurla əlavə edildi!`, 'success');
         document.getElementById('teamName').value = '';
-        loadTeams('all');
-        loadTeamOptions();
+
+        // Automatically switch to teams tab after successful addition
+        setTimeout(() => {
+          openTab('teams');
+        }, 1000);
       })
       .catch(error => {
         showMessage(error.message, 'danger');
+      })
+      .finally(() => {
+        // Re-enable submit button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
       });
   });
 
@@ -355,10 +758,21 @@
     const team1Goals = document.getElementById('team1-goals').value;
     const team2Goals = document.getElementById('team2-goals').value;
 
+    if (!team1Name || !team2Name) {
+      showMessage('Hər iki komanda seçilməlidir', 'danger');
+      return;
+    }
+
     if (team1Name === team2Name) {
       showMessage('Eyni komandanı iki dəfə seçə bilməzsiniz!', 'danger');
       return;
     }
+
+    // Disable submit button to prevent multiple submissions
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Əlavə edilir...';
 
     const url = `${API_URL}/update-match-result?team1Name=${encodeURIComponent(team1Name)}&team2Name=${encodeURIComponent(team2Name)}&team1Goals=${team1Goals}&team2Goals=${team2Goals}`;
 
@@ -372,27 +786,49 @@
         return response.text();
       })
       .then(message => {
-        showMessage('Oyun nəticəsi uğurla əlavə edildi!', 'success');
+        showMessage(`${team1Name} ${team1Goals}:${team2Goals} ${team2Name} oyun nəticəsi uğurla əlavə edildi!`, 'success');
         document.getElementById('team1-select').value = '';
         document.getElementById('team2-select').value = '';
         document.getElementById('team1-goals').value = '';
         document.getElementById('team2-goals').value = '';
-        loadTeams('all');
+
+        // Automatically switch to teams tab after successful addition
+        setTimeout(() => {
+          openTab('teams');
+        }, 1500);
       })
       .catch(error => {
         showMessage(error.message, 'danger');
+      })
+      .finally(() => {
+        // Re-enable submit button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonText;
       });
   });
 
   // Show message function
   function showMessage(text, type) {
     const messageElement = document.getElementById('message');
-    messageElement.textContent = text;
-    messageElement.className = `alert alert-${type}`;
-    messageElement.style.display = 'block';
 
+    let icon = '';
+    if (type === 'success') {
+      icon = '<i class="fas fa-check-circle"></i>';
+    } else if (type === 'danger') {
+      icon = '<i class="fas fa-exclamation-circle"></i>';
+    }
+
+    messageElement.innerHTML = `${icon} ${text}`;
+    messageElement.className = `alert alert-${type}`;
+    messageElement.style.display = 'flex';
+
+    // Auto-dismiss after 5 seconds
     setTimeout(() => {
-      messageElement.style.display = 'none';
+      messageElement.style.opacity = '0';
+      setTimeout(() => {
+        messageElement.style.display = 'none';
+        messageElement.style.opacity = '1';
+      }, 300);
     }, 5000);
   }
 
