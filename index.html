@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Futbol Komanda İdarəetmə Sistemi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f2f5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1, h2 {
+      color: #1e3a8a;
+      text-align: center;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+    }
+    .tab.active {
+      background-color: #1e3a8a;
+      color: white;
+    }
+    .content {
+      display: none;
+      padding: 20px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .content.active {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    label {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select {
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #1e3a8a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #152b5e;
+    }
+    .alert {
+      padding: 10px 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert-danger {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #message {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Futbol Komanda İdarəetmə Sistemi</h1>
+
+  <div class="tabs">
+    <div class="tab active" onclick="openTab('teams')">Komandalar</div>
+    <div class="tab" onclick="openTab('add-team')">Komanda Əlavə Et</div>
+    <div class="tab" onclick="openTab('update-score')">Nəticə Əlavə Et</div>
+  </div>
+
+  <div id="message" class="alert"></div>
+
+  <div id="teams" class="content active">
+    <h2>Komandalar Cədvəli</h2>
+
+    <div>
+      <button onclick="loadTeams('all')">Bütün Komandalar</button>
+      <button onclick="loadTeams('sorted-by-points')">Xal Sayına Görə Sırala</button>
+      <button onclick="loadTeams('sorted-by-wins')">Qələbə Sayına Görə Sırala</button>
+    </div>
+
+    <table id="teams-table">
+      <thead>
+      <tr>
+        <th>Komanda</th>
+        <th>Oyun</th>
+        <th>Q</th>
+        <th>H</th>
+        <th>M</th>
+        <th>VQ</th>
+        <th>BQ</th>
+        <th>QF</th>
+        <th>X</th>
+      </tr>
+      </thead>
+      <tbody id="teams-body">
+      <!-- Data will be loaded here -->
+      </tbody>
+    </table>
+  </div>
+
+  <div id="add-team" class="content">
+    <h2>Yeni Komanda Əlavə Et</h2>
+    <form id="add-team-form">
+      <label for="teamName">Komanda Adı:</label>
+      <input type="text" id="teamName" name="name" required>
+
+      <button type="submit">Komanda Əlavə Et</button>
+    </form>
+  </div>
+
+  <div id="update-score" class="content">
+    <h2>Oyun Nəticəsi Əlavə Et</h2>
+    <form id="update-score-form">
+      <label for="team-select">Komanda:</label>
+      <select id="team-select" name="teamName" required>
+        <option value="">Komanda seçin</option>
+        <!-- Options will be loaded here -->
+      </select>
+
+      <label for="scored">Vurulmuş Qollar:</label>
+      <input type="number" id="scored" name="scoredGoals" min="0" required>
+
+      <label for="conceded">Buraxılmış Qollar:</label>
+      <input type="number" id="conceded" name="concededGoals" min="0" required>
+
+      <button type="submit">Nəticə Əlavə Et</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'http://localhost:8080/api/teams';
+
+  function openTab(tabName) {
+    const contents = document.getElementsByClassName('content');
+    for (let i = 0; i < contents.length; i++) {
+      contents[i].classList.remove('active');
+    }
+
+    const tabs = document.getElementsByClassName('tab');
+    for (let i = 0; i < tabs.length; i++) {
+      tabs[i].classList.remove('active');
+    }
+
+    document.getElementById(tabName).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  function loadTeams(endpoint) {
+    fetch(`${API_URL}/${endpoint}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Şəbəkə xətası baş verdi');
+        }
+        return response.json();
+      })
+      .then(teams => {
+        const tableBody = document.getElementById('teams-body');
+        tableBody.innerHTML = '';
+
+        teams.forEach(team => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+                            <td>${team.name}</td>
+                            <td>${team.played}</td>
+                            <td>${team.wins}</td>
+                            <td>${team.draws}</td>
+                            <td>${team.losses}</td>
+                            <td>${team.goalsScored}</td>
+                            <td>${team.goalsConceded}</td>
+                            <td>${team.goalDifference}</td>
+                            <td>${team.points}</td>
+                        `;
+          tableBody.appendChild(row);
+        });
+      })
+      .catch(error => {
+        showMessage(error.message, 'danger');
+      });
+  }
+
+  function loadTeamOptions() {
+    fetch(`${API_URL}/all`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Şəbəkə xətası baş verdi');
+        }
+        return response.json();
+      })
+      .then(teams => {
+        const selectElement = document.getElementById('team-select');
+        selectElement.innerHTML = '<option value="">Komanda seçin</option>';
+
+        teams.forEach(team => {
+          const option = document.createElement('option');
+          option.value = team.name;
+          option.textContent = team.name;
+          selectElement.appendChild(option);
+        });
+      })
+      .catch(error => {
+        showMessage(error.message, 'danger');
+      });
+  }
+
+  document.getElementById('add-team-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const teamName = document.getElementById('teamName').value;
+
+    const newTeam = {
+      name: teamName,
+      played: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      goalDifference: 0,
+      goalsScored: 0,
+      goalsConceded: 0,
+      points: 0
+    };
+
+    fetch(`${API_URL}/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newTeam)
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Şəbəkə xətası baş verdi');
+        }
+        return response.text();
+      })
+      .then(message => {
+        showMessage('Komanda uğurla əlavə edildi!', 'success');
+        document.getElementById('teamName').value = '';
+        loadTeams('all');
+        loadTeamOptions();
+      })
+      .catch(error => {
+        showMessage(error.message, 'danger');
+      });
+  });
+
+  document.getElementById('update-score-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const teamName = document.getElementById('team-select').value;
+    const scoredGoals = document.getElementById('scored').value;
+    const concededGoals = document.getElementById('conceded').value;
+
+    fetch(`${API_URL}/update-score?teamName=${encodeURIComponent(teamName)}&scoredGoals=${scoredGoals}&concededGoals=${concededGoals}`, {
+      method: 'PUT'
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Şəbəkə xətası baş verdi');
+        }
+        return response.text();
+      })
+      .then(message => {
+        showMessage('Oyun nəticəsi uğurla əlavə edildi!', 'success');
+        document.getElementById('team-select').value = '';
+        document.getElementById('scored').value = '';
+        document.getElementById('conceded').value = '';
+        loadTeams('all');
+      })
+      .catch(error => {
+        showMessage(error.message, 'danger');
+      });
+  });
+
+  // Show message function
+  function showMessage(text, type) {
+    const messageElement = document.getElementById('message');
+    messageElement.textContent = text;
+    messageElement.className = `alert alert-${type}`;
+    messageElement.style.display = 'block';
+
+    setTimeout(() => {
+      messageElement.style.display = 'none';
+    }, 5000);
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    loadTeams('all');
+    loadTeamOptions();
+  });
+</script>
+</body>
+</html>
