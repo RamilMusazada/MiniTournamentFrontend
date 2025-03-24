@@ -840,108 +840,158 @@
 </div>
 
 <script>
-  // Modern JavaScript refactoring for Football Team Management System
+  class FootballTeamManager {
+    constructor() {
+      // Configuration
+      this.API_URL = 'http://localhost:8080/api/v1/teams';
 
-  // Constants
-  const API_URL = 'http://localhost:8080/api/v1/teams';
+      // DOM Elements
+      this.elements = {
+        message: document.getElementById('message'),
+        loading: document.getElementById('loading-teams'),
+        teamsTable: document.getElementById('teams-table'),
+        emptyTeams: document.getElementById('empty-teams'),
+        teamsBody: document.getElementById('teams-body'),
+        team1Select: document.getElementById('team1-select'),
+        team2Select: document.getElementById('team2-select'),
+        addTeamForm: document.getElementById('add-team-form'),
+        updateMatchForm: document.getElementById('update-match-form'),
+        tabs: document.querySelectorAll('.tab'),
+        contents: document.querySelectorAll('.content')
+      };
 
-  // DOM Elements (cached for performance)
-  const elements = {
-    message: document.getElementById('message'),
-    loading: document.getElementById('loading-teams'),
-    teamsTable: document.getElementById('teams-table'),
-    emptyTeams: document.getElementById('empty-teams'),
-    teamsBody: document.getElementById('teams-body'),
-    team1Select: document.getElementById('team1-select'),
-    team2Select: document.getElementById('team2-select'),
-    addTeamForm: document.getElementById('add-team-form'),
-    updateMatchForm: document.getElementById('update-match-form')
-  };
-
-  // Initialize event listeners using modern patterns
-  const initEventListeners = () => {
-    // Tab navigation
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => openTab(tab.getAttribute('onclick').match(/'([^']+)'/)[1]));
-    });
-
-    // Form submissions
-    elements.addTeamForm.addEventListener('submit', handleAddTeamSubmit);
-    elements.updateMatchForm.addEventListener('submit', handleUpdateMatchSubmit);
-  };
-
-  // Tab switching
-  const openTab = (tabName) => {
-    // Hide all content areas and deactivate all tabs
-    document.querySelectorAll('.content').forEach(content => content.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-
-    // Activate selected tab and content
-    document.getElementById(tabName).classList.add('active');
-    document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
-
-    // Load appropriate content based on tab
-    if (tabName === 'update-score') {
-      loadTeamOptions();
-    } else if (tabName === 'teams') {
-      loadTeams('all');
+      // Bind methods to maintain context
+      this.initializeApp = this.initializeApp.bind(this);
+      this.handleAddTeamSubmit = this.handleAddTeamSubmit.bind(this);
+      this.handleUpdateMatchSubmit = this.handleUpdateMatchSubmit.bind(this);
     }
-  };
 
-  // API fetch wrapper with error handling
-  const fetchAPI = async (endpoint, options = {}) => {
-    try {
-      const response = await fetch(`${API_URL}/${endpoint}`, options);
+    // Initialize the entire application
+    initializeApp() {
+      this.attachEventListeners();
+      this.loadTeams('all');
+      this.loadTeamOptions();
+    }
 
-      if (!response.ok) {
-        if (response.status === 409) {
-          throw new Error('Bu adlı komanda artıq mövcuddur');
+    // Attach all event listeners
+    attachEventListeners() {
+      // Tab navigation
+      this.elements.tabs.forEach(tab => {
+        tab.addEventListener('click', () => this.openTab(tab.getAttribute('data-tab')));
+      });
+
+      // Form submissions
+      this.elements.addTeamForm.addEventListener('submit', this.handleAddTeamSubmit);
+      this.elements.updateMatchForm.addEventListener('submit', this.handleUpdateMatchSubmit);
+
+      // Additional event listeners for filter buttons
+      document.getElementById('load-all').addEventListener('click', () => this.loadTeams('all'));
+      document.getElementById('load-by-points').addEventListener('click', () => this.loadTeams('sorted-by-points'));
+      document.getElementById('load-by-wins').addEventListener('click', () => this.loadTeams('sorted-by-wins'));
+    }
+
+    // Tab switching method
+    openTab(tabName) {
+      // Hide all content and deactivate tabs
+      this.elements.contents.forEach(content => content.classList.remove('active'));
+      this.elements.tabs.forEach(tab => tab.classList.remove('active'));
+
+      // Activate selected tab and content
+      document.getElementById(tabName).classList.add('active');
+      document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+
+      // Conditional content loading
+      switch(tabName) {
+        case 'update-score':
+          this.loadTeamOptions();
+          break;
+        case 'teams':
+          this.loadTeams('all');
+          break;
+      }
+    }
+
+    // Robust API fetch method with improved error handling
+    async fetchAPI(endpoint, options = {}) {
+      try {
+        const response = await fetch(`${this.API_URL}/${endpoint}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(this.mapErrorMessage(response.status, errorText));
         }
-        throw new Error('Şəbəkə xətası baş verdi');
-      }
 
-      // Check if response is JSON or text based on content type
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+        const contentType = response.headers.get('content-type');
+        return contentType?.includes('application/json')
+          ? await response.json()
+          : await response.text();
+
+      } catch (error) {
+        this.showMessage(error.message, 'danger');
+        throw error;
       }
-      return await response.text();
-    } catch (error) {
-      showMessage(error.message, 'danger');
-      throw error;
     }
-  };
 
-  // Load teams data
-  const loadTeams = async (endpoint) => {
-    // Show loading state
-    elements.loading.style.display = 'block';
-    elements.teamsTable.style.display = 'none';
-    elements.emptyTeams.style.display = 'none';
+    // Map error status codes to user-friendly messages
+    mapErrorMessage(status, errorText) {
+      const errorMap = {
+        400: 'Yanlış sorğu',
+        401: 'İcazəniz yoxdur',
+        403: 'Əməliyyat qadağandır',
+        404: 'Resurs tapılmadı',
+        409: 'Bu komanda artıq mövcuddur',
+        500: 'Daxili server xətası'
+      };
 
-    try {
-      const teams = await fetchAPI(endpoint);
+      return errorMap[status] || errorText || 'Naməlum xəta baş verdi';
+    }
 
-      // Hide loading indicator
-      elements.loading.style.display = 'none';
-      elements.teamsBody.innerHTML = '';
+    // Load teams with advanced rendering
+    async loadTeams(endpoint) {
+      this.toggleLoadingState(true);
+
+      try {
+        const teams = await this.fetchAPI(endpoint);
+
+        this.toggleLoadingState(false);
+        this.renderTeamsTable(teams, endpoint);
+
+      } catch (error) {
+        this.toggleLoadingState(false);
+        this.handleEmptyState();
+      }
+    }
+
+    // Toggle loading state
+    toggleLoadingState(isLoading) {
+      this.elements.loading.style.display = isLoading ? 'flex' : 'none';
+      this.elements.teamsTable.style.display = isLoading ? 'none' : 'table';
+    }
+
+    // Render teams table with advanced features
+    renderTeamsTable(teams, endpoint) {
+      const tbody = this.elements.teamsBody;
+      tbody.innerHTML = '';
 
       if (teams.length === 0) {
-        elements.teamsTable.style.display = 'none';
-        elements.emptyTeams.style.display = 'block';
+        this.handleEmptyState();
         return;
       }
 
-      elements.teamsTable.style.display = 'table';
-      elements.emptyTeams.style.display = 'none';
+      this.elements.emptyTeams.style.display = 'none';
 
-      // Render teams table
       teams.forEach((team, index) => {
         const row = document.createElement('tr');
-        // Highlight first row for sorted views
-        if (index === 0 && (endpoint === 'sorted-by-points' || endpoint === 'sorted-by-wins')) {
-          row.style.backgroundColor = '#dbeafe';
-          row.style.fontWeight = 'bold';
+
+        // Highlight top team for sorted views
+        if (index === 0 && ['sorted-by-points', 'sorted-by-wins'].includes(endpoint)) {
+          row.classList.add('highlight');
         }
 
         row.innerHTML = `
@@ -955,68 +1005,110 @@
         <td>${team.goalDifference}</td>
         <td>${team.points}</td>
       `;
-        elements.teamsBody.appendChild(row);
+
+        tbody.appendChild(row);
       });
-    } catch (error) {
-      // Handle errors and show empty state
-      elements.loading.style.display = 'none';
-      elements.teamsTable.style.display = 'none';
-      elements.emptyTeams.style.display = 'block';
-      // Error is already handled by fetchAPI
     }
-  };
 
-  // Load team options for match result form
-  const loadTeamOptions = async () => {
-    const { team1Select, team2Select } = elements;
-    team1Select.innerHTML = '<option value="">Yüklənir...</option>';
-    team2Select.innerHTML = '<option value="">Yüklənir...</option>';
+    // Handle empty state
+    handleEmptyState() {
+      this.elements.teamsTable.style.display = 'none';
+      this.elements.emptyTeams.style.display = 'block';
+    }
 
-    try {
-      const teams = await fetchAPI('all');
+    // Load team options for match result form
+    async loadTeamOptions() {
+      const { team1Select, team2Select } = this.elements;
 
-      const defaultOption = '<option value="">Komanda seçin</option>';
-      team1Select.innerHTML = defaultOption;
-      team2Select.innerHTML = defaultOption;
+      this.resetTeamSelects();
 
-      if (teams.length === 0) {
-        showMessage('Oyun nəticəsi əlavə etmək üçün əvvəlcə komandalar əlavə edin', 'danger');
-        return;
+      try {
+        const teams = await this.fetchAPI('all');
+
+        if (teams.length === 0) {
+          this.showMessage('Oyun nəticəsi əlavə etmək üçün əvvəlcə komandalar əlavə edin', 'danger');
+          return;
+        }
+
+        this.populateTeamSelects(teams);
+
+      } catch (error) {
+        this.setTeamSelectsToErrorState();
       }
+    }
+
+    // Reset team selects
+    resetTeamSelects() {
+      const { team1Select, team2Select } = this.elements;
+      team1Select.innerHTML = '<option value="">Komanda seçin</option>';
+      team2Select.innerHTML = '<option value="">Komanda seçin</option>';
+    }
+
+    // Populate team selects
+    populateTeamSelects(teams) {
+      const { team1Select, team2Select } = this.elements;
 
       teams.forEach(team => {
         const teamOption = `<option value="${team.name}">${team.name}</option>`;
         team1Select.insertAdjacentHTML('beforeend', teamOption);
         team2Select.insertAdjacentHTML('beforeend', teamOption);
       });
-    } catch (error) {
+    }
+
+    // Error state for team selects
+    setTeamSelectsToErrorState() {
+      const { team1Select, team2Select } = this.elements;
       team1Select.innerHTML = '<option value="">Xəta baş verdi</option>';
       team2Select.innerHTML = '<option value="">Xəta baş verdi</option>';
-      // Error is already handled by fetchAPI
-    }
-  };
-
-  // Handle add team form submission
-  const handleAddTeamSubmit = async (event) => {
-    event.preventDefault();
-
-    const teamNameInput = document.getElementById('teamName');
-    const teamName = teamNameInput.value.trim();
-
-    if (!teamName) {
-      showMessage('Komanda adı boş ola bilməz', 'danger');
-      return;
     }
 
-    const submitButton = event.target.querySelector('button[type="submit"]');
-    const originalButtonText = submitButton.innerHTML;
+    // Handle add team form submission
+    async handleAddTeamSubmit(event) {
+      event.preventDefault();
+      const teamNameInput = event.target.querySelector('#teamName');
+      const submitButton = event.target.querySelector('button[type="submit"]');
 
-    // Disable button during submission
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Əlavə edilir...';
+      const teamName = teamNameInput.value.trim();
+      if (!this.validateTeamName(teamName)) return;
 
-    try {
-      const newTeam = {
+      const originalButtonText = submitButton.innerHTML;
+      this.disableSubmitButton(submitButton, true);
+
+      try {
+        const newTeam = this.createNewTeamObject(teamName);
+        await this.fetchAPI('add', {
+          method: 'POST',
+          body: JSON.stringify(newTeam)
+        });
+
+        this.handleSuccessfulTeamAddition(teamName, teamNameInput);
+      } catch (error) {
+        // Error is already handled in fetchAPI method
+      } finally {
+        this.disableSubmitButton(submitButton, false, originalButtonText);
+      }
+    }
+
+    // Validate team name
+    validateTeamName(teamName) {
+      if (!teamName) {
+        this.showMessage('Komanda adı boş ola bilməz', 'danger');
+        return false;
+      }
+      return true;
+    }
+
+    // Disable/enable submit button
+    disableSubmitButton(button, isDisabled, originalText = '') {
+      button.disabled = isDisabled;
+      button.innerHTML = isDisabled
+        ? '<i class="fas fa-spinner fa-spin"></i> Əlavə edilir...'
+        : originalText;
+    }
+
+    // Create new team object
+    createNewTeamObject(teamName) {
+      return {
         name: teamName,
         played: 0,
         wins: 0,
@@ -1027,106 +1119,108 @@
         goalsConceded: 0,
         points: 0
       };
+    }
 
-      await fetchAPI('add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTeam)
-      });
-
-      showMessage(`"${teamName}" komandası uğurla əlavə edildi!`, 'success');
+    // Handle successful team addition
+    handleSuccessfulTeamAddition(teamName, teamNameInput) {
+      this.showMessage(`"${teamName}" komandası uğurla əlavə edildi!`, 'success');
       teamNameInput.value = '';
-
-      // Automatically switch to teams tab
-      setTimeout(() => openTab('teams'), 1000);
-    } finally {
-      // Re-enable button regardless of outcome
-      submitButton.disabled = false;
-      submitButton.innerHTML = originalButtonText;
-    }
-  };
-
-  // Handle update match form submission
-  const handleUpdateMatchSubmit = async (event) => {
-    event.preventDefault();
-
-    const { team1Select, team2Select } = elements;
-    const team1Name = team1Select.value;
-    const team2Name = team2Select.value;
-    const team1Goals = document.getElementById('team1-goals').value;
-    const team2Goals = document.getElementById('team2-goals').value;
-
-    if (!team1Name || !team2Name) {
-      showMessage('Hər iki komanda seçilməlidir', 'danger');
-      return;
+      setTimeout(() => this.openTab('teams'), 1000);
     }
 
-    if (team1Name === team2Name) {
-      showMessage('Eyni komandanı iki dəfə seçə bilməzsiniz!', 'danger');
-      return;
+    // Handle update match form submission
+    async handleUpdateMatchSubmit(event) {
+      event.preventDefault();
+
+      const matchData = this.extractMatchData();
+      if (!this.validateMatchData(matchData)) return;
+
+      const submitButton = event.target.querySelector('button[type="submit"]');
+      const originalButtonText = submitButton.innerHTML;
+
+      this.disableSubmitButton(submitButton, true);
+
+      try {
+        const urlParams = new URLSearchParams(matchData);
+        await this.fetchAPI(`update-match-result?${urlParams}`, { method: 'PUT' });
+
+        this.handleSuccessfulMatchUpdate(matchData);
+      } catch (error) {
+        // Error is already handled in fetchAPI method
+      } finally {
+        this.disableSubmitButton(submitButton, false, originalButtonText);
+      }
     }
 
-    const submitButton = event.target.querySelector('button[type="submit"]');
-    const originalButtonText = submitButton.innerHTML;
+    // Extract match data from form
+    extractMatchData() {
+      return {
+        team1Name: this.elements.team1Select.value,
+        team2Name: this.elements.team2Select.value,
+        team1Goals: document.getElementById('team1-goals').value,
+        team2Goals: document.getElementById('team2-goals').value
+      };
+    }
 
-    // Disable button during submission
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Əlavə edilir...';
+    // Validate match data
+    validateMatchData(matchData) {
+      const { team1Name, team2Name, team1Goals, team2Goals } = matchData;
 
-    try {
-      const urlParams = new URLSearchParams({
-        team1Name,
-        team2Name,
-        team1Goals,
-        team2Goals
-      });
+      if (!team1Name || !team2Name) {
+        this.showMessage('Hər iki komanda seçilməlidir', 'danger');
+        return false;
+      }
 
-      await fetchAPI(`update-match-result?${urlParams}`, { method: 'PUT' });
+      if (team1Name === team2Name) {
+        this.showMessage('Eyni komandanı iki dəfə seçə bilməzsiniz!', 'danger');
+        return false;
+      }
 
-      showMessage(`${team1Name} ${team1Goals}:${team2Goals} ${team2Name} oyun nəticəsi uğurla əlavə edildi!`, 'success');
+      return true;
+    }
+
+    // Handle successful match update
+    handleSuccessfulMatchUpdate(matchData) {
+      const { team1Name, team2Name, team1Goals, team2Goals } = matchData;
+
+      this.showMessage(`${team1Name} ${team1Goals}:${team2Goals} ${team2Name} oyun nəticəsi uğurla əlavə edildi!`, 'success');
 
       // Reset form fields
-      team1Select.value = '';
-      team2Select.value = '';
+      this.elements.team1Select.value = '';
+      this.elements.team2Select.value = '';
       document.getElementById('team1-goals').value = '';
       document.getElementById('team2-goals').value = '';
 
       // Automatically switch to teams tab
-      setTimeout(() => openTab('teams'), 1500);
-    } finally {
-      // Re-enable button regardless of outcome
-      submitButton.disabled = false;
-      submitButton.innerHTML = originalButtonText;
+      setTimeout(() => this.openTab('teams'), 1500);
     }
-  };
 
-  // Show notification message
-  const showMessage = (text, type) => {
-    const { message } = elements;
+    // Show notification message
+    showMessage(text, type = 'info') {
+      const { message } = this.elements;
+      const icon = type === 'success'
+        ? '<i class="fas fa-check-circle"></i>'
+        : '<i class="fas fa-exclamation-circle"></i>';
 
-    const icon = type === 'success'
-      ? '<i class="fas fa-check-circle"></i>'
-      : '<i class="fas fa-exclamation-circle"></i>';
+      message.innerHTML = `${icon} ${text}`;
+      message.className = `alert alert-${type}`;
+      message.style.display = 'flex';
 
-    message.innerHTML = `${icon} ${text}`;
-    message.className = `alert alert-${type}`;
-    message.style.display = 'flex';
-
-    // Auto-dismiss with animation
-    setTimeout(() => {
-      message.style.opacity = '0';
+      // Auto-dismiss with animation
       setTimeout(() => {
-        message.style.display = 'none';
-        message.style.opacity = '1';
-      }, 300);
-    }, 5000);
-  };
+        message.style.opacity = '0';
+        setTimeout(() => {
+          message.style.display = 'none';
+          message.style.opacity = '1';
+        }, 300);
+      }, 5000);
+    }
+  }
 
-  // Initialize the application
+  // Initialize the application when DOM is loaded
   document.addEventListener('DOMContentLoaded', () => {
-    initEventListeners();
-    loadTeams('all');
-    loadTeamOptions();
+    const footballTeamManager = new FootballTeamManager();
+    footballTeamManager.initializeApp();
   });
 </script>
 </body>
